@@ -1,7 +1,7 @@
 /**
  * Plugin developed to save html forms data to LocalStorage to restore them after browser crashes, tabs closings
- * and other disasters. 
- * 
+ * and other disasters.
+ *
  * https://github.com/simsalabim/sisyphus
  *
  * @author Alexander Kaupanin <kaupanin@gmail.com>
@@ -125,6 +125,7 @@
 						locationBased: false,
 						timeout: 0,
 						autoRelease: true,
+						uuid: '',
 						onBeforeSave: function() {},
 						onSave: function() {},
 						onBeforeRestore: function() {},
@@ -237,7 +238,7 @@
 								return true;
 							}
 							var field = $( this );
-							var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+                            var prefix = self.getPrefix(targetFormIdAndName, field, self);
 							if ( field.is( ":text" ) || field.is( "textarea" ) ) {
 								if ( ! self.options.timeout ) {
 									self.bindSaveDataImmediately( field, prefix );
@@ -267,7 +268,7 @@
 								// Returning non-false is the same as a continue statement in a for loop; it will skip immediately to the next iteration.
 								return true;
 							}
-							var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+							var prefix = self.getPrefix(targetFormIdAndName, field, self);
 							var value = field.val();
 
 							if ( field.is(":checkbox") ) {
@@ -329,7 +330,7 @@
 								return true;
 							}
 							var field = $( this );
-							var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+							var prefix = self.getPrefix(targetFormIdAndName, field, self);
 							var resque = self.browserStorage.get( prefix );
 							if ( resque !== null ) {
 								self.restoreFieldsData( field, resque );
@@ -416,7 +417,7 @@
 				 */
 				saveToBrowserStorage: function( key, value, fireCallback ) {
 					var self = this;
-					
+
 					var callback_result = self.options.onBeforeSave.call( self );
 					if ( callback_result !== undefined && callback_result === false ) {
 						return;
@@ -512,7 +513,7 @@
 							return true;
 						}
 						var field = $( this );
-						var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+						var prefix = self.getPrefix(targetFormIdAndName, field, self);
 						self.browserStorage.remove( prefix );
 						released = true;
 					} );
@@ -520,8 +521,16 @@
 					if ( released ) {
 						self.options.onRelease.call( self );
 					}
-				}
-
+				},
+                getPrefix: function( targetFormIdAndName, field, self ) {
+                    var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+                    if (self.options.uuid !== '') {
+                        var find = self.options.uuid;
+                        var re = new RegExp(find, 'g');
+                        prefix = prefix.replace(re, 'XXXXXXXXXX');
+                    }
+                    return prefix;
+                }
 			};
 		}
 
